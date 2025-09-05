@@ -1,0 +1,5 @@
+{
+  "name": "Dr.G - AI Health Companion",
+  "description": "An AI health companion that conducts structured medical interviews to help users understand their symptoms and generates a professional report for clinicians. This app does not provide medical advice or prescriptions.",
+  "requestFramePermissions": []
+}
