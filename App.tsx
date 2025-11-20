@@ -90,14 +90,14 @@ const App: React.FC = () => {
       setCategorizedSymptoms(symptoms);
     } catch (error) {
       console.error("Failed to get symptoms:", error);
-       const errorMessage: Message = { role: MessageRole.MODEL, content: "I had trouble summarizing the symptoms. Could we try that again? Please confirm when you're ready to review." };
-       setMessages((prev) => [...prev, errorMessage]);
-       setAppState(AppState.CHATTING);
+      const errorMessage: Message = { role: MessageRole.MODEL, content: "I had trouble summarizing the symptoms. Could we try that again? Please confirm when you're ready to review." };
+      setMessages((prev) => [...prev, errorMessage]);
+      setAppState(AppState.CHATTING);
     } finally {
       setIsLoading(false);
     }
   }, [chat, isLoading]);
-  
+
   const handleConfirmSymptoms = useCallback(async () => {
     if (!chat || !categorizedSymptoms || isLoading) return;
     setAppState(AppState.GENERATING_REPORT);
@@ -108,9 +108,9 @@ const App: React.FC = () => {
       setAppState(AppState.REPORTING);
     } catch (error) {
       console.error("Failed to generate report:", error);
-       const errorMessage: Message = { role: MessageRole.MODEL, content: "I'm sorry, I couldn't generate the final report. Please let me know if you'd like me to try again." };
-       setMessages((prev) => [...prev, errorMessage]);
-       setAppState(AppState.REVIEWING); // Go back to review state
+      const errorMessage: Message = { role: MessageRole.MODEL, content: "I'm sorry, I couldn't generate the final report. Please let me know if you'd like me to try again." };
+      setMessages((prev) => [...prev, errorMessage]);
+      setAppState(AppState.REVIEWING); // Go back to review state
     } finally {
       setIsLoading(false);
     }
@@ -131,23 +131,23 @@ const App: React.FC = () => {
     switch (appState) {
       case AppState.GREETING:
         return (
-          <motion.div initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} className="flex flex-col items-center justify-center h-full text-center p-4">
-             <DrGLogo className="mb-6"/>
-            <h1 className="text-4xl font-bold text-slate-800">Meet Dr.G</h1>
-            <p className="mt-4 max-w-lg text-slate-600">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center justify-center h-full text-center p-4">
+            <DrGLogo className="mb-6" />
+            <h1 className="text-4xl font-bold text-slate-800 dark:text-slate-100">Meet Dr.G</h1>
+            <p className="mt-4 max-w-lg text-slate-600 dark:text-slate-300">
               Your AI health companion. I'm here to listen to your symptoms and prepare a detailed report for you to share with a healthcare professional.
             </p>
-             <div className="mt-8 p-4 bg-amber-50 border-l-4 border-amber-400 text-amber-900/90 text-sm max-w-lg rounded-r-lg text-left">
-                <strong>Disclaimer:</strong> I do not provide medical advice, diagnoses, or prescriptions. In case of a medical emergency, please contact your local emergency services immediately.
+            <div className="mt-8 p-4 bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-400 dark:border-amber-500 text-amber-900/90 dark:text-amber-200 text-sm max-w-lg rounded-r-lg text-left">
+              <strong>Disclaimer:</strong> I do not provide medical advice, diagnoses, or prescriptions. In case of a medical emergency, please contact your local emergency services immediately.
             </div>
             <button
               onClick={initChat}
               disabled={isLoading}
-              className="mt-8 px-8 py-3 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 disabled:bg-indigo-400 transition-all flex items-center shadow-lg shadow-indigo-500/30 focus:outline-none focus:ring-4 focus:ring-indigo-300"
+              className="mt-8 px-8 py-3 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg font-bold hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:bg-indigo-400 dark:disabled:bg-indigo-700 transition-all flex items-center shadow-lg shadow-indigo-500/30 focus:outline-none focus:ring-4 focus:ring-indigo-300 dark:focus:ring-indigo-600"
             >
               Start Symptom Interview
             </button>
-            {!datasetLoaded && <p className="mt-4 text-xs text-slate-500 animate-pulse">Loading knowledge base...</p>}
+            {!datasetLoaded && <p className="mt-4 text-xs text-slate-500 dark:text-slate-400 animate-pulse">Loading knowledge base...</p>}
           </motion.div>
         );
       case AppState.CHATTING:
@@ -168,7 +168,7 @@ const App: React.FC = () => {
               symptoms={categorizedSymptoms}
               onConfirm={handleConfirmSymptoms}
               isGeneratingReport={appState === AppState.GENERATING_REPORT}
-              onChange={(u)=> setCategorizedSymptoms(u)}
+              onChange={(u) => setCategorizedSymptoms(u)}
             />
           </div>
         );
@@ -180,15 +180,15 @@ const App: React.FC = () => {
   };
 
   return (
-  <div className="h-screen p-4 md:p-6 lg:p-8 bg-gradient-to-br from-indigo-50 via-white to-violet-50 flex flex-col">
-       <header className="mb-6 flex-shrink-0">
-         <DrGLogo />
-       </header>
-       <main className="flex-1 min-h-0 overflow-y-auto">
-          <AnimatePresence mode="wait">
-            {renderContent()}
-          </AnimatePresence>
-       </main>
+    <div className="h-screen p-4 md:p-6 lg:p-8 bg-gradient-to-br from-indigo-50 via-white to-violet-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-950 flex flex-col transition-colors duration-300">
+      <header className="mb-6 flex-shrink-0">
+        <DrGLogo />
+      </header>
+      <main className="flex-1 min-h-0 overflow-y-auto">
+        <AnimatePresence mode="wait">
+          {renderContent()}
+        </AnimatePresence>
+      </main>
     </div>
   );
 };
