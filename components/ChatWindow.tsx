@@ -293,15 +293,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ messages, onSendMessage, isLoad
   };
 
   const handleQuickSelect = (val: string) => {
-    // If there are selected symptoms and this is a severity value, combine them
-    if (selectedOptions.length > 0 && val.startsWith('Severity')) {
-      const symptomsText = buildContextualAnswer(selectedOptions);
-      const combinedMessage = `${symptomsText} ${val}.`;
-      setSelectedOptions([]); // Clear selections after sending
-      onSendMessage(combinedMessage);
-    } else {
-      onSendMessage(buildContextualAnswer(val));
-    }
+    // Send the value directly without combining with selected options
+    onSendMessage(buildContextualAnswer(val));
   };
 
   const handleMultiSelectToggle = (val: string) => {

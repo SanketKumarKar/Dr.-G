@@ -5,10 +5,12 @@ import { CategorizedSymptoms, Report } from '../types';
 let ai: GoogleGenAI | null = null;
 
 export const configureApiKey = (key?: string): boolean => {
-    const resolved = key || (import.meta as any)?.env?.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' ? (process as any).env?.API_KEY : undefined);
+    const resolved = key || (import.meta.env.VITE_GEMINI_API_KEY as string);
+    console.log('Attempting to configure Gemini with key:', resolved ? `${resolved.substring(0, 10)}...` : 'undefined');
     if (!resolved) return false;
     try {
         ai = new GoogleGenAI({ apiKey: resolved });
+        console.log('Gemini client configured successfully');
         return true;
     } catch (e) {
         console.error('Failed to configure Gemini client', e);
@@ -104,7 +106,7 @@ const finalReportSchema = {
 
 
 export const startChatSession = async (): Promise<Chat> => {
-    if (!ai) throw new Error('Missing API key. Provide VITE_GEMINI_API_KEY in .env.local.');
+    if (!ai) throw new Error('Missing API key. Provide VITE_GEMINI_API_KEY in environment variables.');
     return ai.chats.create({
         model: 'gemini-2.0-flash',
         config: { systemInstruction: DR_G_SYSTEM_PROMPT },

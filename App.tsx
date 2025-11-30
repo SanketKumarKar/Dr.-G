@@ -47,7 +47,7 @@ const App: React.FC = () => {
       setMessages([{ role: MessageRole.MODEL, content: response.text }]);
     } catch (error: any) {
       console.error('Failed to initialize chat', error);
-      setMessages([{ role: MessageRole.MODEL, content: error?.message?.includes('Missing API key') ? 'API key missing. Please add VITE_GEMINI_API_KEY to .env.local and reload.' : 'Sorry, I\'m having trouble connecting right now. Please try again later.' }]);
+      setMessages([{ role: MessageRole.MODEL, content: error?.message?.includes('Missing API key') ? 'API key missing. Please add VITE_GEMINI_API_KEY to Vercel environment variables and redeploy.' : 'Sorry, I\'m having trouble connecting right now. Please try again later.' }]);
       // Stay in chatting view so user sees message & can retry
     } finally {
       setIsLoading(false);
