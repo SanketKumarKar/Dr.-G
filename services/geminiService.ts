@@ -4,12 +4,21 @@ import { CategorizedSymptoms, Report } from '../types';
 // Lazy client (avoid throwing on import so UI can recover / prompt for key)
 let ai: GoogleGenAI | null = null;
 
+const DEFAULT_MODEL = (import.meta.env.VITE_GEMINI_MODEL as string) || 'gemini-2.5-flash';
+const FALLBACK_MODELS = [
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-pro',
+];
+
 export const configureApiKey = (key?: string): boolean => {
-    const resolved = key || (import.meta.env.VITE_GEMINI_API_KEY as string);
-    console.log('Attempting to configure Gemini with key:', resolved ? `${resolved.substring(0, 10)}...` : 'undefined');
-    if (!resolved) return false;
+    const resolved = key || (import.meta.env.VITE_GEMINI_API_KEY as string | undefined);
+    const cleaned = resolved?.trim().replace(/^['"]|['"]$/g, '');
+    console.log('Attempting to configure Gemini with key:', cleaned ? `${cleaned.substring(0, 10)}...` : 'undefined');
+    if (!cleaned) return false;
     try {
-        ai = new GoogleGenAI({ apiKey: resolved });
+        ai = new GoogleGenAI({ apiKey: cleaned });
         console.log('Gemini client configured successfully');
         return true;
     } catch (e) {
@@ -107,10 +116,24 @@ const finalReportSchema = {
 
 export const startChatSession = async (): Promise<Chat> => {
     if (!ai) throw new Error('Missing API key. Provide VITE_GEMINI_API_KEY in environment variables.');
-    return ai.chats.create({
-        model: 'gemini-2.0-flash',
-        config: { systemInstruction: DR_G_SYSTEM_PROMPT },
-    });
+    const candidates = [DEFAULT_MODEL, ...FALLBACK_MODELS.filter(m => m !== DEFAULT_MODEL)];
+    let lastError: unknown;
+    for (const model of candidates) {
+        try {
+            // systemInstruction is not supported in v1 API, use 'systemInstruction' as the first message instead
+            return ai.chats.create({
+                model,
+                history: [{ role: 'user', parts: [{ text: DR_G_SYSTEM_PROMPT }] }],
+            });
+        } catch (err) {
+            lastError = err;
+            const msg = String((err as any)?.message || err);
+            if (!/not found|unsupported|model|field/i.test(msg)) {
+                throw err;
+            }
+        }
+    }
+    throw lastError || new Error('Unable to initialize chat session with available models.');
 };
 
 export const getCategorizedSymptoms = async (chat: Chat): Promise<CategorizedSymptoms> => {
