@@ -13,7 +13,7 @@ interface ChatWindowProps {
   onReviewSymptoms: () => void;
   isReviewing: boolean;
   isChatting: boolean;
-  apsa?: any; // lightweight to avoid circular type import
+  predictiveChips: string[];
 }
 
 const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
@@ -26,20 +26,19 @@ const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
       className={`flex items-start gap-3 my-5 ${isModel ? '' : 'flex-row-reverse'}`}
     >
       {isModel ? (
-        <div className="bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
+        <div className="bg-[#6366f1] text-white w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
         </div>
       ) : (
-        <div className="bg-slate-200 text-slate-600 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">
+        <div className="bg-[#1e293b] text-[#f1f5f9] w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
           </svg>
         </div>
       )}
-      <div className={`max-w-md p-4 rounded-xl shadow-sm relative overflow-hidden ${isModel ? 'bg-indigo-50 dark:bg-indigo-900/30 text-slate-800 dark:text-slate-200' : 'bg-white dark:bg-slate-700 border border-slate-200/80 dark:border-slate-600/80 text-slate-800 dark:text-slate-200'}`}>
-        <div className="absolute inset-0 pointer-events-none opacity-[0.15] bg-[radial-gradient(circle_at_20%_20%,#6366f1,transparent_60%)]" />
+      <div className={`max-w-md p-4 rounded-xl shadow-sm relative overflow-hidden ${isModel ? 'bg-[#334155] text-[#f1f5f9]' : 'bg-[#0f172a] border border-[#334155] text-[#f1f5f9]'}`}>
         <p className="text-sm relative z-10" dangerouslySetInnerHTML={{ __html: message.content.replace(/\n/g, '<br />') }} />
       </div>
     </motion.div>
@@ -48,21 +47,21 @@ const ChatMessage: React.FC<{ message: Message }> = ({ message }) => {
 
 const ThinkingIndicator: React.FC = () => (
   <div className="flex items-start gap-3 my-5">
-    <div className="bg-indigo-600 dark:bg-indigo-500 text-white w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
+    <div className="bg-[#6366f1] text-white w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
       </svg>
     </div>
-    <div className="max-w-md p-4 rounded-xl shadow-sm bg-indigo-50 dark:bg-indigo-900/30 text-slate-800 dark:text-slate-200 animate-pulse">
+    <div className="max-w-md p-4 rounded-xl shadow-sm bg-[#334155] text-[#f1f5f9] animate-pulse">
       <div className="flex items-center gap-2">
-        <Spinner className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-        <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Dr.G is thinking...</span>
+        <Spinner className="w-4 h-4 text-[#6366f1]" />
+        <span className="text-sm font-medium text-[#f1f5f9]">Dr.G is thinking...</span>
       </div>
     </div>
   </div>
 );
 
-const ChatWindow: React.FC<ChatWindowProps> = ({ messages, onSendMessage, isLoading, onReviewSymptoms, isReviewing, isChatting, apsa }) => {
+const ChatWindow: React.FC<ChatWindowProps> = ({ messages, onSendMessage, isLoading, onReviewSymptoms, isReviewing, isChatting, predictiveChips }) => {
   const [input, setInput] = useState('');
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -115,119 +114,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ messages, onSendMessage, isLoad
   const showBooleanOptions = !isInstructionPrompt && /\b(do you|have you|are you|did you)\b/.test(lastModelQuestion);
   // Only show severity slider if user is asked to RATE something explicitly
   const showSeveritySlider = !isInstructionPrompt && /(rate).*(1\s*(-|to|out of)\s*10)|on a scale of 1-10|rate.*sever(i|e)r?ity|rate.*pain/.test(lastModelQuestion);
-
-  // Predictive option generation using APSA hypotheses + last question intent
-  const predictiveOptions: string[] = useMemo(() => {
-    if (!apsa || !lastModelQuestion || isInstructionPrompt) return [];
-    let opts: string[] = [];
-    try {
-      const snapshot = apsa.getSnapshot?.();
-      const q = lastModelQuestion;
-      // Infer currently focused primary symptom from recent user or model messages
-      const symptomKeywords = ['sore throat', 'throat pain', 'cough', 'fever', 'headache', 'abdominal pain', 'stomach pain', 'nausea', 'vomiting', 'diarrhea', 'chest pain'];
-      let currentSymptom = '';
-      for (let i = messages.length - 1; i >= 0; i--) {
-        const txt = messages[i].content.toLowerCase();
-        for (const kw of symptomKeywords) {
-          if (txt.includes(kw)) { currentSymptom = kw; break; }
-        }
-        if (currentSymptom) break;
-      }
-      // Pattern groups
-      const onsetPattern = /(when (did )?it start|when it started|when did (the|your) .* start|how long ago|onset|sudden or gradual|sudden or gradual|started|sudden|gradual)/;
-      const locationPattern = /(where exactly|where (is|does)|location|in your (head|throat|abdomen|stomach|chest))/;
-      const aggravatePattern = /(what (makes|makes it) (worse|better)|aggravating|alleviating|triggers|worse when|better when)/;
-      const characterPattern = /(describe|what kind of|character|type of (pain|cough|headache))/;
-      const durationPattern = /(how long|lasting|last|does it last|constant|intermittent|come and go|comes and goes)/;
-
-      const locationMap: Record<string, string[]> = {
-        'sore throat': ['Right side', 'Left side', 'Both sides', 'Back of throat', 'Radiates to ear', 'Hard to localize'],
-        'throat pain': ['Right side', 'Left side', 'Both sides', 'Back of throat', 'Radiates to ear', 'Hard to localize'],
-        'headache': ['Forehead', 'One side', 'Both sides', 'Behind eyes', 'Back of head', 'Neck'],
-        'abdominal pain': ['Upper right', 'Upper left', 'Lower right', 'Lower left', 'Center', 'Diffuse'],
-        'stomach pain': ['Upper right', 'Upper left', 'Lower right', 'Lower left', 'Center', 'Diffuse'],
-        'chest pain': ['Left side', 'Right side', 'Center', 'Diffuse', 'Radiates to arm', 'Radiates to jaw']
-      };
-      const characterMap: Record<string, string[]> = {
-        'sore throat': ['Scratchy', 'Burning', 'Raw', 'Sharp when swallowing', 'Dull ache'],
-        'throat pain': ['Scratchy', 'Burning', 'Raw', 'Sharp when swallowing', 'Dull ache'],
-        'headache': ['Throbbing', 'Pressure', 'Sharp', 'Dull', 'Pulsating'],
-        'cough': ['Dry', 'Productive', 'Barking', 'Tickly', 'Spasmodic'],
-        'chest pain': ['Pressure', 'Sharp', 'Burning', 'Tightness', 'Stabbing']
-      };
-      const aggravateMap: Record<string, string[]> = {
-        'sore throat': ['Swallowing', 'Talking', 'Cold air', 'Night', 'Morning', 'Nothing specific'],
-        'throat pain': ['Swallowing', 'Talking', 'Cold air', 'Night', 'Morning', 'Nothing specific'],
-        'headache': ['Light', 'Noise', 'Movement', 'Coughing', 'Nothing specific'],
-        'abdominal pain': ['Eating', 'Not eating', 'Movement', 'Deep breath', 'Nothing specific'],
-        'chest pain': ['Exertion', 'Deep breath', 'Lying down', 'Movement', 'Nothing specific']
-      };
-
-      if (durationPattern.test(q)) {
-        opts = ['Constant', 'Comes and goes', 'Improving', 'Worsening', 'Not sure'];
-        return opts;
-      }
-      if (onsetPattern.test(q)) {
-        opts = ['Sudden', 'Gradual', 'Not sure', 'Can\'t remember'];
-        return opts;
-      }
-      if (locationPattern.test(q)) {
-        const base = locationMap[currentSymptom] || ['One area', 'Multiple areas', 'All over', 'Hard to localize'];
-        return base;
-      }
-      if (aggravatePattern.test(q)) {
-        const base = aggravateMap[currentSymptom] || ['Movement', 'Rest', 'Eating', 'Night', 'Morning', 'Exercise'];
-        return base;
-      }
-      if (characterPattern.test(q)) {
-        const base = characterMap[currentSymptom] || ['Sharp', 'Dull', 'Pressure', 'Burning', 'Stabbing'];
-        return base;
-      }
-      // If question is clarifying presence of already mentioned symptom, show qualifiers
-      const qualifierTriggers = /(where|location|worse|better|character|type|kind|how long|duration|when did|what time|trigger|aggravate|constant|gradual)/;
-      if (qualifierTriggers.test(q)) {
-        if (/location|where/.test(q)) opts = ['Head', 'Chest', 'Abdomen', 'Back', 'Joints', 'All over'];
-        else if (/duration|how long|when did/.test(q)) opts = ['Minutes', 'Hours', 'Days', 'Weeks', 'Months'];
-        else if (/worse|better|trigger|aggravate/.test(q)) opts = ['Movement', 'Rest', 'Eating', 'Night', 'Morning', 'Exercise'];
-        else opts = ['Mild', 'Moderate', 'Severe'];
-        return opts;
-      }
-      // If the model asks about additional symptoms
-      if (/other symptom|any other|anything else|additional symptom/.test(q)) {
-        // Suggest high information gain symptoms from hypotheses
-        const hyp = snapshot?.hypotheses || [];
-        const evidenceNames = new Set((snapshot?.evidence || []).map((e: any) => e.name));
-        const candidates: Record<string, number> = {};
-        for (const h of hyp) {
-          const condition = h.condition;
-          const tokens = apsa.knowledge ? apsa.knowledge[condition] : undefined;
-          if (!tokens) continue;
-          for (const t of tokens) {
-            if (evidenceNames.has(t)) continue;
-            if (!/pain|fever|cough|rash|headache|nausea|vomit|swelling|fatigue|diarrhea|shortness of breath|sore|throat|runny nose|stiff|chills/.test(t)) continue;
-            candidates[t] = Math.max(candidates[t] || 0, h.probability);
-          }
-        }
-        opts = Object.entries(candidates)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 8)
-          .map(([k]) => k);
-        return opts;
-      }
-      // If APSA proposed question (stored elsewhere) asked about a specific symptom pattern like 'have you experienced X'
-      const m = q.match(/have you experienced ([a-z0-9 \-]+)/);
-      if (m) {
-        const symptom = m[1].trim();
-        // Provide Yes/No plus related co-occurring symptoms
-        const co = apsa.getCooccurring?.(symptom, 4) || [];
-        opts = ['Yes', 'No', 'Not sure', ...co.slice(0, 4).map(c => `Also ${c}`)];
-        return opts;
-      }
-      return [];
-    } catch (e) {
-      return [];
-    }
-  }, [apsa, lastModelQuestion, messages]);
 
   // Extract enumerated symptom options when model lists them (after 'like', 'such as')
   const symptomOptions = useMemo(() => {
@@ -313,11 +199,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ messages, onSendMessage, isLoad
     onSendMessage(buildContextualAnswer(selectedOptions));
   };
 
-  const shouldShowPredictive = predictiveOptions.length > 0;
+  const shouldShowPredictive = predictiveChips && predictiveChips.length > 0;
 
   return (
-    <div className="w-full h-full bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 rounded-2xl shadow-xl border border-slate-200/70 dark:border-slate-700/70 flex flex-col overflow-hidden ring-1 ring-black/5 dark:ring-white/5 backdrop-blur transition-colors duration-300">
-      <div className="p-4 border-b border-slate-200/60 dark:border-slate-700/60 flex-shrink-0 bg-white/70 dark:bg-slate-800/70 backdrop-blur supports-[backdrop-filter]:bg-white/40 dark:supports-[backdrop-filter]:bg-slate-800/40">
+    <div className="w-full h-full bg-[#1e293b] rounded-2xl shadow-md border border-[#334155] flex flex-col overflow-hidden transition-colors duration-300">
+      <div className="p-4 border-b border-[#334155] flex-shrink-0 bg-[#1e293b]/90 backdrop-blur supports-[backdrop-filter]:bg-[#1e293b]/80">
         <DrGLogo />
       </div>
       <div className="flex-1 overflow-y-auto p-6 pb-4 space-y-1">
@@ -328,7 +214,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ messages, onSendMessage, isLoad
         <div ref={messagesEndRef} />
       </div>
       {(showBooleanOptions || showSeveritySlider || symptomOptions.length > 1 || shouldShowPredictive) && (
-        <div className="px-6 pb-4 pt-2 space-y-3 bg-gradient-to-t from-white via-white to-transparent">
+        <div className="px-6 pb-4 pt-2 space-y-3 bg-gradient-to-t from-[#1e293b] via-[#1e293b] to-transparent">
           {showBooleanOptions && (
             <OptionChips options={["Yes", "No", "Not sure"]} disabled={isLoading} onSelect={handleQuickSelect} />
           )}
@@ -356,10 +242,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ messages, onSendMessage, isLoad
               />
             </div>
           )}
-          {shouldShowPredictive && !showBooleanOptions && predictiveOptions.length > 0 && (
+          {shouldShowPredictive && !showBooleanOptions && (
             <div className="mt-3">
               <OptionChips
-                options={predictiveOptions}
+                options={predictiveChips}
                 selected={selectedOptions}
                 allowMultiple={true}
                 disabled={isLoading}
@@ -371,7 +257,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ messages, onSendMessage, isLoad
             <div className="mt-3 flex justify-end animate-[fadeIn_0.2s_ease]">
               <button
                 onClick={handleConfirmSelection}
-                className="px-4 py-1.5 bg-indigo-600 text-white text-sm font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                className="px-4 py-1.5 bg-[#6366f1] text-white text-sm font-semibold rounded-lg shadow-sm hover:opacity-90 transition-opacity flex items-center gap-2 focus:outline-none focus:ring-4 focus:ring-indigo-500/50"
               >
                 <span>Send Selected</span>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -388,7 +274,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ messages, onSendMessage, isLoad
           <button
             onClick={onReviewSymptoms}
             disabled={isLoading || isReviewing}
-            className="px-6 py-2.5 bg-white dark:bg-slate-700 text-indigo-700 dark:text-indigo-300 rounded-lg font-semibold text-sm hover:bg-indigo-50 dark:hover:bg-slate-600 transition-all border border-indigo-200 dark:border-indigo-700 shadow-sm flex items-center justify-center mx-auto gap-2 disabled:opacity-50"
+            className="px-6 py-2.5 bg-[#0f172a] text-[#6366f1] rounded-lg font-semibold text-sm hover:bg-[#1e293b] transition-colors border border-[#6366f1] shadow-sm flex items-center justify-center mx-auto gap-2 disabled:opacity-50 focus:outline-none focus:ring-4 focus:ring-indigo-500/50"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -398,7 +284,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ messages, onSendMessage, isLoad
         </div>
       )}
 
-      <div className="mt-auto p-4 border-t border-slate-200/60 dark:border-slate-700/60 bg-white/80 dark:bg-slate-800/80 backdrop-blur">
+      <div className="mt-auto p-4 border-t border-[#334155] bg-[#1e293b]">
         <div className="relative">
           <textarea
             ref={textareaRef}
@@ -407,13 +293,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ messages, onSendMessage, isLoad
             onKeyPress={handleKeyPress}
             placeholder="Describe what you're feeling..."
             rows={1}
-            className="w-full p-3 pr-12 bg-slate-100/80 dark:bg-slate-700/80 rounded-xl text-sm text-slate-800 dark:text-slate-200 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:focus:ring-indigo-500 resize-none overflow-y-hidden transition-all shadow-inner"
+            className="w-full p-3 pr-12 bg-[#0f172a] border border-[#334155] rounded-xl text-sm text-[#f1f5f9] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#6366f1] resize-none overflow-y-hidden transition-all shadow-inner"
             disabled={isLoading || isReviewing}
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || isLoading || isReviewing}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-gradient-to-br from-indigo-600 to-violet-600 dark:from-indigo-500 dark:to-violet-500 text-white rounded-xl flex items-center justify-center hover:from-indigo-500 hover:to-violet-500 dark:hover:from-indigo-400 dark:hover:to-violet-400 disabled:bg-slate-400 dark:disabled:bg-slate-600 disabled:cursor-not-allowed transition-all shadow focus:outline-none focus:ring-4 focus:ring-indigo-300 dark:focus:ring-indigo-600"
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-[#6366f1] text-white rounded-xl flex items-center justify-center hover:opacity-90 disabled:bg-[#334155] disabled:text-[#f1f5f9] disabled:cursor-not-allowed transition-opacity shadow focus:outline-none focus:ring-4 focus:ring-indigo-500/50"
             aria-label="Send message"
           >
             {isLoading ? <Spinner className="w-4 h-4" /> : (

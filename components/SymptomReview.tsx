@@ -127,23 +127,23 @@ const SymptomReview: React.FC<SymptomReviewProps> = ({ symptoms, onConfirm, isGe
   let cardIndex = 0;
 
   return (
-    <div className="w-full h-full bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200/80 dark:border-slate-700/80 flex flex-col overflow-hidden transition-colors duration-300">
-      <div className="p-6 border-b border-slate-200/80 dark:border-slate-700/80 relative">
+    <div className="w-full h-full bg-[#1e293b] rounded-xl shadow-md border border-[#334155] flex flex-col overflow-hidden transition-colors duration-300">
+      <div className="p-6 border-b border-[#334155] relative">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-1">Review Your Symptoms</h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <h2 className="text-xl font-bold text-[#f1f5f9] mb-1">Review Your Symptoms</h2>
+            <p className="text-sm text-[#94a3b8]">
               Here's a structured summary. Adjust by telling Dr.G in the chat if anything is missing or inaccurate.
             </p>
           </div>
-          <div className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-indigo-50 to-violet-50 dark:from-indigo-900/30 dark:to-violet-900/30 border border-indigo-100 dark:border-indigo-800 shadow-sm animate-[fadeIn_.6s_ease]">
-            <span className="w-2 h-2 rounded-full bg-indigo-500 dark:bg-indigo-400 animate-pulse" />
-            <span className="text-[11px] font-medium text-slate-700 dark:text-slate-300 leading-tight">Report will generate<br />right after confirmation</span>
+          <div className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg bg-[#0f172a] border border-[#6366f1]/20 shadow-sm animate-[fadeIn_.6s_ease]">
+            <span className="w-2 h-2 rounded-full bg-[#6366f1] animate-pulse" />
+            <span className="text-[11px] font-medium text-[#f1f5f9] leading-tight">Report will generate<br />right after confirmation</span>
           </div>
         </div>
         <div className="mt-4 md:mt-5">
-          <div className="md:hidden flex items-center gap-2 px-3 py-2 rounded-md bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 text-[11px] text-slate-700 dark:text-slate-300 animate-[fadeIn_.6s_ease]">
-            <span className="w-2 h-2 rounded-full bg-indigo-500 dark:bg-indigo-400 animate-ping" />
+          <div className="md:hidden flex items-center gap-2 px-3 py-2 rounded-md bg-[#0f172a] border border-[#6366f1]/20 text-[11px] text-[#f1f5f9] animate-[fadeIn_.6s_ease]">
+            <span className="w-2 h-2 rounded-full bg-[#6366f1] animate-ping" />
             Your report will be generated shortly after symptom identification.
           </div>
         </div>
@@ -198,12 +198,12 @@ const SymptomReview: React.FC<SymptomReviewProps> = ({ symptoms, onConfirm, isGe
         })}
       </div>
 
-      <div className="mt-auto p-6 border-t border-slate-200/80 dark:border-slate-700/80 bg-white dark:bg-slate-800 rounded-b-xl text-center">
-        <p className="text-slate-600 dark:text-slate-400 mb-4 text-sm">Does this summary seem accurate?</p>
+      <div className="mt-auto p-6 border-t border-[#334155] bg-[#0f172a] rounded-b-xl text-center">
+        <p className="text-[#94a3b8] mb-4 text-sm">Does this summary seem accurate?</p>
         <button
           onClick={onConfirm}
           disabled={isGeneratingReport}
-          className="w-full md:w-auto px-8 py-3 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg font-bold hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:bg-slate-400 dark:disabled:bg-slate-600 disabled:cursor-wait transition-all flex items-center justify-center shadow-lg shadow-indigo-500/20 focus:outline-none focus:ring-4 focus:ring-indigo-300 dark:focus:ring-indigo-600"
+          className="w-full md:w-auto px-8 py-3 bg-[#6366f1] text-white rounded-lg font-bold hover:opacity-90 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-wait transition-opacity flex items-center justify-center shadow-md focus:outline-none focus:ring-4 focus:ring-indigo-500/50"
         >
           {isGeneratingReport ? (
             <>

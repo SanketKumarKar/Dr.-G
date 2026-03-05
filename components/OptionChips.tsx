@@ -10,11 +10,11 @@ interface OptionChipsProps {
 }
 
 const colors = [
-  'from-indigo-500 to-violet-500',
-  'from-rose-500 to-pink-500',
-  'from-emerald-500 to-teal-500',
-  'from-amber-500 to-orange-500',
-  'from-sky-500 to-cyan-500'
+  'bg-[#6366f1]', // Indigo 500
+  'bg-[#4f46e5]', // Indigo 600
+  'bg-[#8b5cf6]', // Violet 500
+  'bg-[#7c3aed]', // Violet 600
+  'bg-[#6d28d9]'  // Violet 700
 ];
 
 const OptionChips: React.FC<OptionChipsProps> = ({ options, selected = [], allowMultiple = false, disabled, onSelect }) => {
@@ -24,28 +24,26 @@ const OptionChips: React.FC<OptionChipsProps> = ({ options, selected = [], allow
         {options.map((opt, i) => {
           const isSelected = selected.includes(opt);
           // If multi-select is on, dim unselected items slightly if some are selected, or keep them normal.
-          // Actually, let's just make selected items pop more.
-          const baseStyle = "relative group overflow-hidden px-4 py-1.5 rounded-full text-xs font-medium tracking-wide transition-all duration-200 disabled:opacity-40 focus:outline-none focus-visible:ring-2 ring-offset-1 ring-indigo-200 dark:ring-indigo-700";
+          // Let's just make selected items pop more without shifting layout.
+          const baseStyle = "relative group overflow-hidden px-4 py-1.5 rounded-full text-xs font-medium tracking-wide transition-all duration-200 disabled:opacity-40 focus:outline-none focus-visible:ring-2 ring-offset-1 ring-[#6366f1]";
 
           // Dynamic style based on selection state
           const activeStyle = isSelected
-            ? `text-white bg-gradient-to-br ${colors[i % colors.length]} shadow-md scale-105`
-            : "text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-indigo-300 dark:hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30";
+            ? `text-white ${colors[i % colors.length]} shadow-sm`
+            : "text-[#f1f5f9] bg-[#0f172a] border border-[#334155] hover:border-[#6366f1] hover:bg-[#1e293b]";
 
           // If not allowing multiple, keep original behavior (always colored)
           const finalStyle = allowMultiple
             ? `${baseStyle} ${activeStyle}`
-            : `${baseStyle} text-white bg-gradient-to-br ${colors[i % colors.length]}`;
+            : `${baseStyle} text-white ${colors[i % colors.length]}`;
 
           return (
             <motion.button
               layout
               key={opt}
-              whileHover={!disabled ? { y: -2 } : undefined}
-              whileTap={!disabled ? { scale: 0.95 } : undefined}
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.85 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               disabled={disabled}
               onClick={() => onSelect(opt)}
               className={finalStyle}
